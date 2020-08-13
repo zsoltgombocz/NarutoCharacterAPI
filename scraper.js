@@ -66,7 +66,14 @@ async function additionalInfo(link) {
         if(i > personal_start && i < (personal_start + personal_count)) {
             const open_tag =  $element.find('td').text().indexOf("<") + 1
             if($element.find('th').text().trim() == "Height" || $element.find('th').text().trim() == "Weight") {
-                info[$element.find('th').text().trim()] = $element.find('td li span span').text()
+                let temp = "";
+                let first = "";
+                $element.find('td ul').each((i, element) => {
+                    first = $(element).find('li').html().trim().replace(/<.*>/g, '');
+                    temp += first + $(element).find('span:nth-child(1) > *').html() +"-"+ $(element).find('span:nth-child(2) > *').html() + ", "
+                })
+
+                info[$element.find('th').text().trim()] = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2);
             }else{
                 info[$element.find('th').text().trim()] = $element.find('td').text().trim()
                 .replace(/<.*>/g, '')
@@ -75,6 +82,7 @@ async function additionalInfo(link) {
                 .replace(/, */g, ', ')
                 .replace(/\"(.*)/gs, '')
                 .replace(/^\ /, '')
+                .replace(/  +/g, ' ')
             }
         }
     })
