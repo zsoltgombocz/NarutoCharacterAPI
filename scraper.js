@@ -1,23 +1,38 @@
 const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
+const ora = require('ora');
+const { Console } = require("console");
 
 const url = "https://naruto.fandom.com/wiki/Category:Characters";
 
+const Characters = [];
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }
+
 async function getLetters() {
-    const {data} = await axios.get(url);
-    const $ = cheerio.load(data);
+    try {
+        const {data} = await axios.get(url);
+        const $ = cheerio.load(data);
 
-    const letters = [];
+        const letters = [];
 
-    const ul = $('ul.category-page__alphabet-shortcuts');
+        const ul = $('ul.category-page__alphabet-shortcuts');
 
-    ul.find('li a').each((i, element) => {
-        const $element = $(element);
-        letters.push($element.text());
-    })
-    letters[letters.length -1] = "¡";
-    return letters.slice(1);
+        ul.find('li a').each((i, element) => {
+            const $element = $(element);
+            letters.push($element.text());
+        })
+        letters[letters.length -1] = "¡";
+        return letters.slice(1);
+    } catch (error) {
+        console.error(error);
+        process.exit(1);
+    }
 }
 
 async function additionalInfo(link) {
@@ -66,53 +81,71 @@ async function additionalInfo(link) {
     return info;
 }
 
-const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
-
 async function getCharacters() {
     console.log("Scraping characters, it may take a while...")
     let char_count = 1;
     const letters = await getLetters(); //0-26
 
-    const Characters = [];
-    for (let i = 0; i <= letters.length; i++) {
-        const url_alph = url + "?from=" + letters[i];
+    let letter_index = 0;
+
+    while(letter_index < letters.length) {
+        const url_alph = url + "?from=" + letters[letter_index];
+        try {
+            const {data} = await axios.get(url_alph);
+            const $ = cheerio.load(data);
         
-        const {data} = await axios.get(url_alph);
-        const $ = cheerio.load(data);
-        
-        const ul = (i != (letters.length - 1)) ? $('div.category-page__members ul').first() : $('div.category-page__members');
-        
-        ul.find('a.category-page__member-link').each(async (i, element) => {
-            const $element = $(element);
-            await sleep(1000)
-            additionalInfo("https://naruto.fandom.com" + $element.attr('href'))
-            .then(res => {
+            const ul = (letter_index != (letters.length - 1)) ? $('div.category-page__members ul').first() : $('div.category-page__members');
+            
+            ul.find('a.category-page__member-link').each((i, element) => {
+                const $element = $(element);
+                
                 const character = {
                     profile_link: "https://naruto.fandom.com" + $element.attr('href'),
                     name: $element.text(),
-                    personal: res
                 };
-                Characters.push(character)
+                Characters.push(character);
+                char_count += 1;
+            });
 
-                char_count++;
-            })
-            .catch(err => console.log(err));
-        });   
+            letter_index++;
+
+        } catch (error) {
+            console.error(error);
+            process.exit(1);
+        }
     }
 
-    fs.writeFileSync("Characters.json", JSON.stringify(Characters, null, 4), (err) => {
-        if(err) console.log.log(err)
-        return true
+    console.log(Characters.length + " character saved to memory, while saving counted " + (char_count - 1) + "!");
+
+    console.log("Started collecting additional data, it take a little bit longer...")
+    const data = ora("").start()
+
+    await asyncForEach(Characters, async (character, i) => {
+
+        try {
+            const result = await additionalInfo(character.profile_link)
+
+            Characters[i].personal = result;
+
+            data.text = "Collected: " + i + " / " + Characters.length;
+
+        } catch (error) {
+            console.log(error)
+        }
     });
+   
+    fs.writeFileSync("Characters.json", JSON.stringify(Characters, null, 4), (err) => {
+        if(err) { console.log.log(err) }
+    });
+
+    return "\n All Character saved to Characters.json!"
 }
 
 if(fs.existsSync("Characters.json")) {
     if(process.argv[2] == "-y") {
-        console.log("Refreshing Characters.js...")
+        console.log("Refreshing Characters.json...")
 
-        getCharacters().then(res => { console.log("Done!"); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
+        getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
     }else{
         console.log("Characters are saved in 'Characters.json', if you want to refresh the whole, run 'node scraper.js -y'.")
 
@@ -121,6 +154,6 @@ if(fs.existsSync("Characters.json")) {
 }else{
     console.log("Setting up Characters for usage...")
 
-    getCharacters().then(res => { console.log("Done!"); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
+    getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
 }
 
