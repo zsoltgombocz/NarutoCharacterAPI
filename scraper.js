@@ -42,15 +42,65 @@ async function additionalInfo(link) {
     const table = $('table.infobox.box');
 
     let temp = []
+    let info = {};
+    let category = "Personal"
 
-    table.find('tr').each((i, element) => {
+    table.find('tr:contains(Personal)').nextUntil( "tr th span", "tr" ).each((i, element) => {
         
         const $element = $(element);
 
-        temp.push(($element.find('th.mainheader').html() != null) ? $element.find('th.mainheader').html().trim() : $element.find('th.mainheader').html());
+        if($element.find('td table').length !== 0) { //Toggle infos
+
+            $element.find('td table').each((i, element) => {
+                const $table = $(element)
+                
+                const toggle_category = $table.find('th.mainheader').text().trim()
+
+                const toggle_data = $table.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n+/g, ', ').replace(/  +/g, ' ');
+                
+                info[toggle_category] = toggle_data;
+            })
+        }
+
+        if($element.find('th.mainheader').length !== 0) {
+            category = $element.find('th.mainheader').text().trim();
+            return;
+        }
+
+        const key = $element.find('th').text().trim();
+        let data = "";
+
+        if(key == "Height" || key == "Weight") {
+            let temp = "";
+            let first = "";
+            $element.find('td ul').each((i, element) => {
+                first = $(element).find('li').html().trim().replace(/<.*>/g, '');
+                temp += first + $(element).find('span:nth-child(1) > *').html() +"-"+ $(element).find('span:nth-child(2) > *').html() + ", "
+            })
+
+            data = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2)
+        }else if(key == "Affiliation") {
+            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/".*/gs, '');
+        }else{
+            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ');
+        }
+ 
+
+        if(info[category] === undefined) {
+            info[category] = {};
+            info[category][key] = data;
+        }else{
+            info[category][key] = data;
+        }
+
+
+
+         
+
+        /*temp.push(($element.find('th.mainheader').html() != null) ? $element.find('th.mainheader').html().trim() : $element.find('th.mainheader').html());*/
     })
 
-    j = 0;
+    /*j = 0;
     for (let i = temp.indexOf("Personal") + 1; i < temp.length; i++) {
         if(temp[i] == null) {
             j++
@@ -79,13 +129,15 @@ async function additionalInfo(link) {
                 .replace(/<.*>/g, '')
                 .replace(/\n\n/g, ',')
                 .replace('(Forms)', '')
-                .replace(/, */g, ', ')
+                .replace(/, *//*g, ', ')
                 .replace(/\"(.*)/gs, '')
                 .replace(/^\ /, '')
                 .replace(/  +/g, ' ')
             }
         }
     })
+    */
+    console.log(info)
     return info;
 }
 
@@ -148,7 +200,7 @@ async function getCharacters() {
 
     return "\n All Character saved to Characters.json!"
 }
-
+/*
 if(fs.existsSync("Characters.json")) {
     if(process.argv[2] == "-y") {
         console.log("Refreshing Characters.json...")
@@ -164,4 +216,6 @@ if(fs.existsSync("Characters.json")) {
 
     getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
 }
+*/
+additionalInfo("https://naruto.fandom.com/wiki/Nurui")
 
