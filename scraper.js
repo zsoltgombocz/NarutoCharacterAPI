@@ -2,7 +2,6 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
 const ora = require('ora');
-const { Console } = require("console");
 
 const url = "https://naruto.fandom.com/wiki/Category:Characters";
 
