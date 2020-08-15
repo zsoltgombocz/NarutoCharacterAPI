@@ -56,7 +56,7 @@ async function additionalInfo(link) {
                 
                 const toggle_category = $table.find('th.mainheader').text().trim()
 
-                const toggle_data = $table.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n+/g, ', ').replace(/  +/g, ' ');
+                const toggle_data = $table.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n+/g, ', ').replace(/  +/g, ' ').replace(/^ +/gm, '').replace(/\(No.*/g, '');
                 
                 info[toggle_category] = toggle_data;
             })
@@ -80,9 +80,9 @@ async function additionalInfo(link) {
 
             data = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2)
         }else if(key == "Affiliation") {
-            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/".*/gs, '');
+            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n\n/g, ', ').replace(/".*/gs, '').replace(/.*svg/g, '').replace(/^ +/gm, '').replace(/  +/g, ' ');
         }else{
-            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ');
+            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/\(No.*/g, '').replace(/  +/g, ' ');
         }
  
 
@@ -137,7 +137,6 @@ async function additionalInfo(link) {
         }
     })
     */
-    console.log(info)
     return info;
 }
 
@@ -200,7 +199,7 @@ async function getCharacters() {
 
     return "\n All Character saved to Characters.json!"
 }
-/*
+
 if(fs.existsSync("Characters.json")) {
     if(process.argv[2] == "-y") {
         console.log("Refreshing Characters.json...")
@@ -216,6 +215,5 @@ if(fs.existsSync("Characters.json")) {
 
     getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
 }
-*/
-additionalInfo("https://naruto.fandom.com/wiki/Nurui")
+
 
