@@ -6,7 +6,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const middlewares = require('./middlewares');
-const api = require('./api');
+const api = require('./v1');
 
 const app = express();
 
@@ -17,11 +17,12 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.json({
-    message: '🦄🌈✨👋🌎🌍🌏✨🌈🦄'
+    message: 'This is a non-profitable, fan-made Naruto Charater API, which is open-source and can be found in GitHub. :)',
+    link: "https://github.com/Miraglia00/NarutoCharacterAPI"
   });
 });
 
-app.use('/api/v1', api);
+app.use('/v1/', api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
