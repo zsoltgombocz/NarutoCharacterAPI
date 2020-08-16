@@ -40,10 +40,26 @@ async function additionalInfo(link) {
 
     const table = $('table.infobox.box');
 
-    let temp = []
     let info = {};
-    let category = "Personal"
 
+
+    if(table.find('td.imagecell div.tabbertab').length !== 0) { //Images
+        info['image'] = {};
+        table.find('td.imagecell div.tabbertab').each((i, element) => {
+            const $element = $(element);
+
+            const image_title = $element.attr('title');
+
+            const url = $element.find('div div a').attr('href');
+
+            info['image'][image_title] = url;
+
+        })
+    }else{
+        info['image'] = table.find('td.imagecell a').attr('href');
+    }
+
+    let category = "Personal"
     table.find('tr:contains(Personal)').nextUntil( "tr th span", "tr" ).each((i, element) => {
         
         const $element = $(element);
@@ -91,51 +107,8 @@ async function additionalInfo(link) {
         }else{
             info[category][key] = data;
         }
-
-
-
-         
-
-        /*temp.push(($element.find('th.mainheader').html() != null) ? $element.find('th.mainheader').html().trim() : $element.find('th.mainheader').html());*/
     })
 
-    /*j = 0;
-    for (let i = temp.indexOf("Personal") + 1; i < temp.length; i++) {
-        if(temp[i] == null) {
-            j++
-        }else break;
-    }
-    const personal_start = temp.indexOf("Personal");
-    const personal_count = j + 1;
-
-    let info = {};
-
-    table.find('tr').each((i, element) => {
-        const $element = $(element);
-        if(i > personal_start && i < (personal_start + personal_count)) {
-            const open_tag =  $element.find('td').text().indexOf("<") + 1
-            if($element.find('th').text().trim() == "Height" || $element.find('th').text().trim() == "Weight") {
-                let temp = "";
-                let first = "";
-                $element.find('td ul').each((i, element) => {
-                    first = $(element).find('li').html().trim().replace(/<.*>/g, '');
-                    temp += first + $(element).find('span:nth-child(1) > *').html() +"-"+ $(element).find('span:nth-child(2) > *').html() + ", "
-                })
-
-                info[$element.find('th').text().trim()] = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2);
-            }else{
-                info[$element.find('th').text().trim()] = $element.find('td').text().trim()
-                .replace(/<.*>/g, '')
-                .replace(/\n\n/g, ',')
-                .replace('(Forms)', '')
-                .replace(/, *//*g, ', ')
-                .replace(/\"(.*)/gs, '')
-                .replace(/^\ /, '')
-                .replace(/  +/g, ' ')
-            }
-        }
-    })
-    */
     return info;
 }
 
