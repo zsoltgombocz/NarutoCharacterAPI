@@ -8,7 +8,7 @@ const url = "https://naruto.fandom.com/wiki/Category:Characters";
 const Characters = [];
 
 async function asyncForEach(array, callback) {
-    for (let index = 0; index < array.length; index++) {
+    for (let index = 0; index <= array.length-1; index++) {
       await callback(array[index], index, array);
     }
   }
@@ -52,14 +52,14 @@ async function additionalInfo(link) {
 
             const url = $element.find('div div a').attr('href');
 
-            info['image'][image_title] = url;
+            info['image'][image_title.toLowerCase().replace(/ /, '_')] = url;
 
         })
     }else{
         info['image'] = table.find('td.imagecell a').attr('href');
     }
 
-    let category = "Personal"
+    let category = "personal"
     table.find('tr:contains(Personal)').nextUntil( "tr th span", "tr" ).each((i, element) => {
         
         const $element = $(element);
@@ -67,9 +67,9 @@ async function additionalInfo(link) {
         if($element.find('td table').length !== 0) { //Toggle infos
 
             $element.find('td table').each((i, element) => {
-                const $table = $(element)
+                const $table = $(element);
                 
-                const toggle_category = $table.find('th.mainheader').text().trim()
+                const toggle_category = $table.find('th.mainheader').text().trim().toLowerCase().replace(/ /, '_');
 
                 const toggle_data = $table.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n+/g, ', ').replace(/  +/g, ' ').replace(/^ +/gm, '').replace(/\(No.*/g, '');
                 
@@ -78,14 +78,14 @@ async function additionalInfo(link) {
         }
 
         if($element.find('th.mainheader').length !== 0) {
-            category = $element.find('th.mainheader').text().trim();
+            category = $element.find('th.mainheader').text().trim().toLowerCase().replace(/ /, '_');
             return;
         }
 
-        const key = $element.find('th').text().trim();
+        const key = $element.find('th').text().trim().toLowerCase();
         let data = "";
 
-        if(key == "Height" || key == "Weight") {
+        if(key == "height" || key == "weight") {
             let temp = "";
             let first = "";
             $element.find('td ul').each((i, element) => {
@@ -94,7 +94,7 @@ async function additionalInfo(link) {
             })
 
             data = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2)
-        }else if(key == "Affiliation") {
+        }else if(key == "affiliation") {
             data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n\n/g, ', ').replace(/".*/gs, '').replace(/.*svg/g, '').replace(/^ +/gm, '').replace(/  +/g, ' ');
         }else{
             data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/\(No.*/g, '').replace(/  +/g, ' ');
@@ -103,9 +103,9 @@ async function additionalInfo(link) {
 
         if(info[category] === undefined) {
             info[category] = {};
-            info[category][key] = data;
+            info[category][key.replace(/ /, '_')] = data;
         }else{
-            info[category][key] = data;
+            info[category][key.replace(/ /, '_')] = data;
         }
     })
 
@@ -156,9 +156,9 @@ async function getCharacters() {
         try {
             const result = await additionalInfo(character.profile_link)
 
-            Characters[i].personal = result;
+            Characters[i] = Object.assign(Characters[i], result)
 
-            data.text = "Collected: " + i + " / " + Characters.length;
+            data.text = "Collected: " + (i+1) + " / " + (Characters.length-1);
 
         } catch (error) {
             console.log(error)
