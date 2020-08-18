@@ -1,16 +1,18 @@
 const express = require('express');
 
-const Characters = require('../../Characters.json')
+const {filterArray} = require('./filter');
 
 const router = express.Router();
 
+router.get('/', async (req, res) => {
+  const data = await filterArray(req.query);
 
-
-router.get('/', (req, res) => {
   res.json({
-    count: Characters.length-1,
-    data: Characters
+    count: data.length,
+    data: data
   });
+
+
 });
 
 module.exports = router;
