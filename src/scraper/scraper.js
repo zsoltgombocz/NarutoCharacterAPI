@@ -5,6 +5,12 @@ const ora = require('ora');
 
 const url = "https://naruto.fandom.com/wiki/Category:Characters";
 
+const path = require('path');
+
+const root = path.dirname(require.main.filename || process.mainModule.filename);
+
+const file = root + '/Characters.json';
+
 const Characters = [];
 
 async function asyncForEach(array, callback) {
@@ -95,7 +101,7 @@ async function additionalInfo(link) {
 
             data = temp.replace(/  +/g, ' ').replace(/.null/g, '').slice(0, -2)
         }else if(key == "affiliation") {
-            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n\n/g, ', ').replace(/".*/gs, '').replace(/.*svg/g, '').replace(/^ +/gm, '').replace(/  +/g, ' ');
+            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n/g, ', ').replace(/\n\n/g, ', ').replace(/".*/gs, '').replace(/.*svg/g, '').replace(/^ +/gm, '').replace(/  +/g, ' ');
         }else{
             data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/\(No.*/g, '').replace(/  +/g, ' ');
         }
@@ -146,7 +152,7 @@ async function getCharacters() {
         }
     }
 
-    console.log(Characters.length + " character saved to memory, while saving counted " + (char_count - 1) + "!");
+    console.log(Characters.length-1 + " character saved to memory, while saving counted " + (char_count - 2) + "!");
 
     console.log("Started collecting additional data, it take a little bit longer...")
     const data = ora("").start()
@@ -165,15 +171,15 @@ async function getCharacters() {
         }
     });
    
-    fs.writeFileSync("Characters.json", JSON.stringify(Characters, null, 4), (err) => {
+    fs.writeFileSync(file, JSON.stringify(Characters, null, 4), (err) => {
         if(err) { console.log.log(err) }
     });
 
     return "\n All Character saved to Characters.json!"
 }
 
-if(fs.existsSync("Characters.json")) {
-    if(process.argv[2] == "-y") {
+if(fs.existsSync(file)) {
+    if(JSON.parse(process.env.npm_config_argv).original[2] == "-y") {
         console.log("Refreshing Characters.json...")
 
         getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
@@ -183,7 +189,7 @@ if(fs.existsSync("Characters.json")) {
         process.exit(0);
     }
 }else{
-    console.log("Setting up Characters for usage...")
+    console.log("Setting up Characters.json for usage...")
 
     getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
 }
