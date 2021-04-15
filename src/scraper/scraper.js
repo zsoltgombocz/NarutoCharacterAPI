@@ -2,14 +2,15 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
 const ora = require('ora');
+const file = require('../file.js');
 
 const url = "https://naruto.fandom.com/wiki/Category:Characters";
+
+const popular_url = "https://naruto.fandom.com/wiki/Naruto_Character_Popularity_Polls";
 
 const path = require('path');
 
 const root = path.dirname(require.main.filename || process.mainModule.filename);
-
-const file = root + '/Characters.json';
 
 const Characters = [];
 
@@ -171,27 +172,82 @@ async function getCharacters() {
         }
     });
    
-    fs.writeFileSync(file, JSON.stringify(Characters, null, 4), (err) => {
+    fs.writeFileSync(file.getRoot() + '/Characters.json', JSON.stringify(Characters, null, 4), (err) => {
         if(err) { console.log.log(err) }
     });
 
-    return "\n All Character saved to Characters.json!"
+    return "\n [SCRAPER]: All Character saved to Characters.json!"
 }
 
-if(fs.existsSync(file)) {
-    if(JSON.parse(process.env.npm_config_argv).original[2] == "-y") {
-        console.log("Refreshing Characters.json...")
+async function getMostPopularCharacters(){
 
-        getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
-    }else{
-        console.log("Characters are saved in 'Characters.json', if you want to refresh the whole, run 'node scraper.js -y'.")
+    const {data} = await axios.get(popular_url);
+    const $ = cheerio.load(data);
+    const content = $('div#mw-content-text');
 
-        process.exit(0);
+    let Populars = [];
+
+    let lists = [];
+    
+    content.find('ol').each((i, element) => {
+        lists.push(element);
+        
+    })
+
+    lists.splice(4,1);
+    lists.splice(5,1);
+
+    for(i = 0; i < lists.length; i++){
+        $(lists[i]).find('li').each((i, element) => {
+            let e = $(element).text().slice(0, $(element).text().indexOf("–")-1); // This char is not -, this is from the website, some special middle line.
+
+            e = (e.includes("and")) ? e.slice(0, $(element).text().indexOf("and")-1) : e;
+
+            e = (e.includes(",")) ? e.slice(0, $(element).text().indexOf(", ")-1) : e;
+
+            e = e.replace(/ $/g, "")
+
+            if(!Populars.includes(e)){
+                Populars.push(e); 
+            }
+        })
     }
-}else{
-    console.log("Setting up Characters.json for usage...")
 
-    getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
+    fs.writeFileSync(file.getRoot() + '/Populars.json', JSON.stringify(Populars, null, 4), (err) => {
+        if(err) { console.log.log(err) }
+    });
+}
+
+try{
+    if(file.checkFile('Populars.json')){    
+        getMostPopularCharacters().then(res => {}).catch(err => { console.log(err); process.exit(0) })
+    }else{
+        file.checkFile('Populars.json', true);
+        getMostPopularCharacters().then(res => {}).catch(err => { console.log(err); process.exit(0) })
+    }
+}catch(err){
+    console.log(err);
+    process.exit();
+}
+
+try{
+    if(file.checkFile('Characters.json')){
+        console.log("[SCRAPER]: Characters are saved in 'Characters.json', if you want to refresh the whole, run 'npm run scrape -y'.")
+    }else{
+        file.checkFile('Characters.json', true);
+    
+        getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
+    }
+    
+    if(JSON.parse(process.env.npm_config_argv).original[2] == "-y" && file.checkFile('Characters.json')) {
+    
+        console.log("[SCRAPER]: Refreshing Characters.json...")  
+        
+        getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
+    }
+}catch(err){
+    console.log(err);
+    process.exit();
 }
 
 
