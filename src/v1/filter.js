@@ -1,22 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const file = require('../file.js');
 
-const root = path.dirname(require.main.filename || process.mainModule.filename);
-let Characters;
-try {
-  if(fs.existsSync(root + '/scraper/Characters.json')) {
-      Characters = require(root + '/scraper/Characters.json');
-  } else {
-    console.log('Could not find Characters.json! Creatinga new one in src/scraper/ directory...')
+let Characters = (file.checkFile('Characters.json', true))? require(file.getRoot() + '/scraper/Characters.json') : process.exit(0);
 
-    fs.writeFileSync(root + '/scraper/Characters.json', "[]", err =>{
-      console.log(err)
-    })
-    Characters = require(root + '/scraper/Characters.json');
-  }
-} catch (err) {
-  console.error(err);
-}
 
 const Fuse = require('fuse.js')
 
@@ -40,7 +25,8 @@ async function filterArray(options = null) {
         keys: [
           "name",
           "personal.sex",
-          "personal.affiliation"
+          "personal.affiliation",
+          "personal.team"
         ]
       };
       for(option in options) {
