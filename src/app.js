@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'This is a non-profitable, fan-made Naruto Charater API, which is open-source and can be found in GitHub. :)',
+    message: 'This is a non-profitable, fan-made Naruto Charater API, which is open-source and can be found on GitHub. :)',
     link: "https://github.com/Miraglia00/NarutoCharacterAPI"
   });
 });
