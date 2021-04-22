@@ -1,6 +1,6 @@
 const file = require('../file.js');
 
-let Characters = (file.checkFile('Characters.json', true))? require(file.getRoot() + '/scraper/Characters.json') : process.exit(0);
+let Characters = (file.checkFile('scraper/Characters.json', true))? require(file.getRoot() + '/scraper/Characters.json') : process.exit(0);
 
 
 const Fuse = require('fuse.js')
@@ -26,7 +26,7 @@ async function filterArray(options = null) {
           "name",
           "personal.sex",
           "personal.affiliation",
-          "personal.team"
+          "personal.team",
         ]
       };
       for(option in options) {
