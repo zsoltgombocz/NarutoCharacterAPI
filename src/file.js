@@ -5,7 +5,7 @@ const root = path.dirname(require.main.filename || process.mainModule.filename);
 
 function checkFile(filename, create=false){
   const file = root + '/' + filename;
-
+  
   if(fs.existsSync(file)) {
       return true
   }else{
