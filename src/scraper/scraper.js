@@ -20,6 +20,9 @@ async function asyncForEach(array, callback) {
     }
   }
 
+let Populars = [];
+let PopularCharacters = []
+
 async function getLetters() {
     try {
         const {data} = await axios.get(url);
@@ -161,18 +164,26 @@ async function getCharacters() {
     await asyncForEach(Characters, async (character, i) => {
 
         try {
-            const result = await additionalInfo(character.profile_link)
+            const result = await additionalInfo(character.profile_link);
 
-            Characters[i] = Object.assign(Characters[i], result)
+            Characters[i] = Object.assign(Characters[i], result);
+
+            if(Populars.indexOf(Characters[i].name) > -1) {
+                PopularCharacters.push(Characters[i]);
+            }
 
             data.text = "Collected: " + (i+1) + " / " + (Characters.length-1);
 
         } catch (error) {
-            console.log(error)
+            console.log(error);
         }
     });
    
     fs.writeFileSync(file.getRoot() + '/Characters.json', JSON.stringify(Characters, null, 4), (err) => {
+        if(err) { console.log.log(err) }
+    });
+
+    fs.writeFileSync(file.getRoot() + '/Populars.json', JSON.stringify(PopularCharacters, null, 4), (err) => {
         if(err) { console.log.log(err) }
     });
 
@@ -184,8 +195,6 @@ async function getMostPopularCharacters(){
     const {data} = await axios.get(popular_url);
     const $ = cheerio.load(data);
     const content = $('div#mw-content-text');
-
-    let Populars = [];
 
     let lists = [];
     
@@ -212,10 +221,6 @@ async function getMostPopularCharacters(){
             }
         })
     }
-
-    fs.writeFileSync(file.getRoot() + '/Populars.json', JSON.stringify(Populars, null, 4), (err) => {
-        if(err) { console.log.log(err) }
-    });
 }
 
 try{
