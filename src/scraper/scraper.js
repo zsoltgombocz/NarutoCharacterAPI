@@ -60,13 +60,17 @@ async function additionalInfo(link) {
 
             const image_title = $element.attr('title');
 
-            const url = $element.find('div div a').attr('href');
+            const url = $element.find('div div a').attr('href').replace(/static/, 'vignette3');
 
             info['image'][image_title.toLowerCase().replace(/ /, '_')] = url;
 
         })
     }else{
-        info['image'] = table.find('td.imagecell a').attr('href');
+        const url = table.find('td.imagecell a').attr('href');
+        if(url != undefined){
+            info['image'] = url.replace(/static/, 'vignette3');
+        }
+        
     }
 
     let category = "personal"
