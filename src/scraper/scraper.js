@@ -21,7 +21,6 @@ async function asyncForEach(array, callback) {
   }
 
 let Populars = [];
-let PopularCharacters = []
 
 async function getLetters() {
     try {
@@ -85,7 +84,13 @@ async function additionalInfo(link) {
                 
                 const toggle_category = $table.find('th.mainheader').text().trim().toLowerCase().replace(/ /, '_');
 
-                const toggle_data = $table.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n+/g, ', ').replace(/  +/g, ' ').replace(/^ +/gm, '').replace(/\(No.*/g, '');
+                const toggle_data = $table.find('td').text().trim()
+                .replace(/<img.*>/g, '')
+                .replace(/\n+/g, ', ')
+                .replace(/  +/g, ' ')
+                .replace(/^ +/gm, '')
+                .replace(/\\n/g, ', ')
+                .replace(/\(No.*/g, '');
                 
                 info[toggle_category] = toggle_data;
             })
@@ -111,7 +116,7 @@ async function additionalInfo(link) {
         }else if(key == "affiliation") {
             data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/\n/g, ', ').replace(/\n\n/g, ', ').replace(/".*/gs, '').replace(/.*svg/g, '').replace(/^ +/gm, '').replace(/  +/g, ' ');
         }else{
-            data = $element.find('td').text().trim().replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/\(No.*/g, '').replace(/  +/g, ' ');
+            data = $element.find('td').text().trim().replace(/\n/g, ', ').replace(/<img.*>/g, '').replace(/^ +/gm, '').replace(/\n\n/g, ', ').replace(/\(No.*/g, '').replace(/  +/g, ' ');
         }
  
 
@@ -173,21 +178,27 @@ async function getCharacters() {
             Characters[i] = Object.assign(Characters[i], result);
 
             if(Populars.indexOf(Characters[i].name) > -1) {
-                PopularCharacters.push(Characters[i]);
+                fs.appendFileSync(file.getRoot() + '/Populars.json', JSON.stringify(Characters[i], null, 4) + ",\n", (err) => {
+                    if(err) { console.log.log(err) }
+                });
             }
 
             data.text = "Collected: " + (i+1) + " / " + (Characters.length-1);
+
+            fs.appendFileSync(file.getRoot() + '/Characters.json', JSON.stringify(Characters[i], null, 4) + ",\n", (err) => {
+                if(err) { console.log.log(err) }
+            });
 
         } catch (error) {
             console.log(error);
         }
     });
-   
-    fs.writeFileSync(file.getRoot() + '/Characters.json', JSON.stringify(Characters, null, 4), (err) => {
+
+    fs.appendFileSync(file.getRoot() + '/Characters.json', "\n]", (err) => {
         if(err) { console.log.log(err) }
     });
 
-    fs.writeFileSync(file.getRoot() + '/Populars.json', JSON.stringify(PopularCharacters, null, 4), (err) => {
+    fs.appendFileSync(file.getRoot() + '/Populars.json', "\n]", (err) => {
         if(err) { console.log.log(err) }
     });
 

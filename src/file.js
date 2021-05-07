@@ -11,7 +11,7 @@ function checkFile(filename, create=false){
   }else{
       if(create){
           try {
-            fs.writeFileSync(file, "[]", err =>{
+            fs.writeFileSync(file, "[\n", err =>{
               console.log('[FILE-ERROR]: ' + err)
             })
           }catch(err) {
