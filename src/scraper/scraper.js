@@ -169,7 +169,12 @@ async function getCharacters() {
 
     console.log("Started collecting additional data, it take a little bit longer...")
     const data = ora("").start()
-
+    fs.appendFileSync(file.getRoot() + '/Populars.json', "[\n", (err) => {
+        if(err) { console.log.log(err) }
+    });
+    fs.appendFileSync(file.getRoot() + '/Characters.json', "[\n", (err) => {
+        if(err) { console.log.log(err) }
+    });
     await asyncForEach(Characters, async (character, i) => {
 
         try {
