@@ -275,4 +275,9 @@ try{
     process.exit();
 }
 
+process.on('SIGINT', function() {
+    console.log("Caught interrupt signal");
+    //CLOSE JSON FILE, FUNCTION IN FILE.JS
+});
+
 
