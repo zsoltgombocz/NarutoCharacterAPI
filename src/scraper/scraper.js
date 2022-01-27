@@ -68,13 +68,11 @@ async function additionalInfo(link) {
                         imageTitles.push($(link).text());
                     }
                 })
-                console.log(imageTitles)
             }
         }
 
         table.find('td.imagecell div.wds-tab__content').each((i, div) => {
             let url = $(div).find('a').attr('href');
-            console.log(url);
             info['image'][imageTitles[i]] = url.replace(/static/, 'vignette3');
         })
     }else{
