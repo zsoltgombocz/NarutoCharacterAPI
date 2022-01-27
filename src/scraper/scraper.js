@@ -2,7 +2,6 @@ const cheerio = require("cheerio");
 const axios = require("axios");
 const fs = require("fs");
 const ora = require('ora');
-const file = require('../file.js');
 
 const url = "https://naruto.fandom.com/wiki/Category:Characters";
 
@@ -13,6 +12,11 @@ const path = require('path');
 const root = path.dirname(require.main.filename || process.mainModule.filename);
 
 const Characters = [];
+
+const CharactersModel = require('../database/models/Character');
+const PopularsModel = require('../database/models/Popular');
+
+require('../database/db');
 
 async function asyncForEach(array, callback) {
     for (let index = 0; index <= array.length-1; index++) {
@@ -50,26 +54,34 @@ async function additionalInfo(link) {
     const table = $('table.infobox.box');
 
     let info = {};
-
-
-    if(table.find('td.imagecell div.tabbertab').length !== 0) { //Images
+    if(table.find('td.imagecell a').length > 1) { //Not only one image
         info['image'] = {};
-        table.find('td.imagecell div.tabbertab').each((i, element) => {
-            const $element = $(element);
+        let imageCellDivs = table.find('td.imagecell div.tabber.wds-tabber > div');
+        let imageTitles = [];
+        for(let i = 0; i < imageCellDivs.length; i++) {
+            if(i === 0) { //Image titles (clickable buttons)
+                let titles = $(imageCellDivs).find('a');
+                
+                titles.each((i, link) => {
+                    let text = $(link).text();
+                    if(text !== ""){
+                        imageTitles.push($(link).text());
+                    }
+                })
+                console.log(imageTitles)
+            }
+        }
 
-            const image_title = $element.attr('title');
-
-            const url = $element.find('div div a').attr('href').replace(/static/, 'vignette3');
-
-            info['image'][image_title.toLowerCase().replace(/ /, '_')] = url;
-
+        table.find('td.imagecell div.wds-tab__content').each((i, div) => {
+            let url = $(div).find('a').attr('href');
+            console.log(url);
+            info['image'][imageTitles[i]] = url.replace(/static/, 'vignette3');
         })
     }else{
         const url = table.find('td.imagecell a').attr('href');
         if(url != undefined){
             info['image'] = url.replace(/static/, 'vignette3');
-        }
-        
+        } 
     }
 
     let category = "personal"
@@ -132,11 +144,11 @@ async function additionalInfo(link) {
 }
 
 async function getCharacters() {
-    console.log("Scraping characters, it may take a while...")
-    let char_count = 1;
     const letters = await getLetters(); //0-26
+    let char_count = 1;
+    let letter_index = 0;  
 
-    let letter_index = 0;
+    let storedCharactersCount = await (await CharactersModel.find()).length;
 
     while(letter_index < letters.length) {
         const url_alph = url + "?from=" + letters[letter_index];
@@ -165,49 +177,39 @@ async function getCharacters() {
         }
     }
 
-    console.log(Characters.length-1 + " character saved to memory, while saving counted " + (char_count - 2) + "!");
+    if(storedCharactersCount < (Characters.length-1) || storedCharactersCount == 0) {
+        getMostPopularCharacters().then(res => {}).catch(err => { console.log(err); });
 
-    console.log("Started collecting additional data, it take a little bit longer...")
-    const data = ora("").start()
-    fs.appendFileSync(file.getRoot() + '/Populars.json', "[\n", (err) => {
-        if(err) { console.log.log(err) }
-    });
-    fs.appendFileSync(file.getRoot() + '/Characters.json', "[\n", (err) => {
-        if(err) { console.log.log(err) }
-    });
-    await asyncForEach(Characters, async (character, i) => {
+        console.log(Characters.length-1 + " character saved to memory!");
 
-        try {
-            const result = await additionalInfo(character.profile_link);
+        console.log("Started collecting additional data, it take a little bit longer...")
+        const data = ora("").start()
+        await asyncForEach(Characters, async (character, i) => {
 
-            Characters[i] = Object.assign(Characters[i], result);
+            try {
+                const result = await additionalInfo(character.profile_link);
 
-            if(Populars.indexOf(Characters[i].name) > -1) {
-                fs.appendFileSync(file.getRoot() + '/Populars.json', JSON.stringify(Characters[i], null, 4) + ",\n", (err) => {
-                    if(err) { console.log.log(err) }
-                });
+                Characters[i] = Object.assign(Characters[i], result);
+
+                if(Populars.indexOf(Characters[i].name) > -1) {
+                    let scrapedPopularCharacter = new PopularsModel(Characters[i]);
+                    await scrapedPopularCharacter.save();
+                }
+                
+                let scrapedCharacter = new CharactersModel(Characters[i]);
+                await scrapedCharacter.save();
+
+                data.text = "Collected: " + (i+1) + " / " + (Characters.length-1);
+
+            } catch (error) {
+                console.log(error);
             }
+        });
 
-            data.text = "Collected: " + (i+1) + " / " + (Characters.length-1);
+        return "\n[SCRAPER]: All Character saved to the database!"
+    }else return "\n[SCRAPER]: Everything is up to date!"
 
-            fs.appendFileSync(file.getRoot() + '/Characters.json', JSON.stringify(Characters[i], null, 4) + ",\n", (err) => {
-                if(err) { console.log.log(err) }
-            });
-
-        } catch (error) {
-            console.log(error);
-        }
-    });
-
-    fs.appendFileSync(file.getRoot() + '/Characters.json', "\n]", (err) => {
-        if(err) { console.log.log(err) }
-    });
-
-    fs.appendFileSync(file.getRoot() + '/Populars.json', "\n]", (err) => {
-        if(err) { console.log.log(err) }
-    });
-
-    return "\n [SCRAPER]: All Character saved to Characters.json!"
+    
 }
 
 async function getMostPopularCharacters(){
@@ -244,40 +246,25 @@ async function getMostPopularCharacters(){
 }
 
 try{
-    if(file.checkFile('Populars.json')){    
-        getMostPopularCharacters().then(res => {}).catch(err => { console.log(err); process.exit(0) })
-    }else{
-        file.checkFile('Populars.json', true);
-        getMostPopularCharacters().then(res => {}).catch(err => { console.log(err); process.exit(0) })
-    }
-}catch(err){
-    console.log(err);
-    process.exit();
-}
+    if(process.argv[2] == "reset") {
+        console.log("[SCRAPER]: Reseting database, deleting all information...");
 
-try{
-    if(file.checkFile('Characters.json')){
-        console.log("[SCRAPER]: Characters are saved in 'Characters.json', if you want to refresh the whole, run 'npm run scrape -y'.")
+        CharactersModel.deleteMany({}).then(() => {
+            console.log("[SCRAPER]: Characters deleted!");
+        });
+
+        PopularsModel.deleteMany({}).then(() => {
+            console.log("[SCRAPER]: Popular characters deleted!");
+
+            console.log("[SCRAPER]: Now you can run 'npm run scrape' in order to fill up the database again.")
+
+            process.exit();
+        });
     }else{
-        file.checkFile('Characters.json', true);
-    
-        getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
-    }
-    
-    if(JSON.parse(process.env.npm_config_argv).original[2] == "-y" && file.checkFile('Characters.json')) {
-    
-        console.log("[SCRAPER]: Refreshing Characters.json...")  
-        
         getCharacters().then(res => { console.log(res); process.exit(0) }).catch(err => { console.log(err); process.exit(0) })
     }
 }catch(err){
     console.log(err);
     process.exit();
 }
-
-process.on('SIGINT', function() {
-    console.log("Caught interrupt signal");
-    //CLOSE JSON FILE, FUNCTION IN FILE.JS
-});
-
 
