@@ -72,4 +72,6 @@ typings/
 # Serverless directories
 .serverless
 
-Characters.json
+src/scraper/Characters.json
+
+src/scraper/Populars.json
