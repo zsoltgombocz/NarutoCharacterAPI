@@ -11,7 +11,7 @@ let PopularModel = require('../database/models/Popular')
 
 router.get('/:query', async (req, res) => {
   let data = [];
-  const query;
+  const query = null;
  
   if(req.params.query === undefined || req.params.query === null) {
     query = {};
