@@ -11,8 +11,14 @@ let PopularModel = require('../database/models/Popular')
 
 router.get('/:query', async (req, res) => {
   let data = [];
-  const query = await createSearchOptions(req.params.query)
-
+  const query;
+ 
+  if(req.params.query === undefined || req.params.query === null) {
+    query = {};
+  }else{
+    query = await createSearchOptions(req.params.query)
+  }
+  
   await CharacterModel.find(query).cursor().
   on('data', function(doc) { data.push(doc) }).
   on('end', function() { 
