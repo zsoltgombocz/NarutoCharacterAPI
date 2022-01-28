@@ -8,6 +8,8 @@ require('dotenv').config();
 const middlewares = require('./middlewares');
 const api = require('./v1');
 
+require('./database/db')
+
 const app = express();
 
 app.use(morgan('dev'));
@@ -22,9 +24,13 @@ app.get('/', (req, res) => {
   });
 });
 
-app.use('/v1/', api);
+
+
+app.use('/v1/',api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
+
+
 
 module.exports = app;
