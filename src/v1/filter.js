@@ -1,20 +1,19 @@
-async function createSearchOptions(options = null) {
+async function createSearchQuery(options = null) {
    if(options === null || options === undefined || options === '' || Object.keys(options).length === 0) return array;
 
-    let arrayOfOptions = options.split('&');
     let constructedFilter = {};
-    for(const option of arrayOfOptions) {
-      
-      if(option.includes("=")){
-          const key = option.split("=")[0];
-          const value = option.split("=")[1];
-          constructedFilter[key] = {$regex: value, $options: 'i'}
+    
+    for (const option in options) {
+      if(option === "personal.sex") {
+        constructedFilter[option] = {$regex: `^${options[option]}$`, $options: 'i'};
+        continue;
       }
+
+      constructedFilter[option] = {$regex: options[option], $options: 'i'};
+      
+      
     }
-
-    console.log(constructedFilter)
-
-    return constructedFilter
+    return constructedFilter;
       
       /*let data = [];
       console.log(req.params)
@@ -26,4 +25,4 @@ async function createSearchOptions(options = null) {
 
 }
 
-module.exports = {createSearchOptions};
+module.exports = {createSearchQuery};
