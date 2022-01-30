@@ -1,7 +1,7 @@
 const express = require('express');
 const functions = require('./functions.js');
 
-const {createSearchOptions} = require('./filter');
+const {createSearchQuery} = require('./filter');
 const { contentSecurityPolicy } = require('helmet');
 
 const router = express.Router();
@@ -9,16 +9,14 @@ const router = express.Router();
 let CharacterModel = require('../database/models/Character')
 let PopularModel = require('../database/models/Popular')
 
-router.get('/:query', async (req, res) => {
+router.get('/', async (req, res) => {
   let data = [];
   let query = null;
- 
-  if(req.params.query === undefined || req.params.query === null) {
-    query = {};
-  }else{
-    query = await createSearchOptions(req.params.query)
-  }
-  
+
+  if(req.body != undefined || req.body != {}){
+    query = await createSearchQuery(req.body);
+  }else { query = {}; };
+
   await CharacterModel.find(query).cursor().
   on('data', function(doc) { data.push(doc) }).
   on('end', function() { 
@@ -32,11 +30,12 @@ router.get('/:query', async (req, res) => {
 router.get('/populars', async (req, res) => {
   let data = [];
   let randomCharacters = [];
+
   await PopularModel.find().cursor().
   on('data', function(doc) { data.push(doc) }).
   on('end', function() { 
-   randomCharacters = functions.random(data, req.query);
 
+    randomCharacters = functions.random(data, req.query);
     res.json({
       count: randomCharacters.length,
       data: randomCharacters
@@ -47,9 +46,11 @@ router.get('/populars', async (req, res) => {
 router.get('/random', async (req, res) =>{
   let data = [];
   let randomCharacters = [];
+
   await CharacterModel.find().cursor().
   on('data', function(doc) { data.push(doc) }).
   on('end', function() { 
+
    randomCharacters = functions.random(data, req.query);
 
     res.json({
