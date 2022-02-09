@@ -28,7 +28,10 @@ let Populars = [];
 
 async function getLetters() {
     try {
-        const {data} = await axios.get(url);
+        const {data} = await axios.get(url, {headers:{
+
+        }});
+
         const $ = cheerio.load(data);
 
         const letters = [];
@@ -39,7 +42,7 @@ async function getLetters() {
             const $element = $(element);
             letters.push($element.text());
         })
-        letters[letters.length -1] = "¡";
+        letters[letters.length -1] = "%C2%A1";
         return letters.slice(1);
     } catch (error) {
         console.error(error);
