@@ -8,6 +8,8 @@ require('dotenv').config();
 const middlewares = require('./middlewares');
 const api = require('./v1');
 
+require('./database/db')
+
 const app = express();
 
 app.use(morgan('dev'));
@@ -17,14 +19,18 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
   res.json({
-    message: 'This is a non-profitable, fan-made Naruto Charater API, which is open-source and can be found in GitHub. :)',
+    message: 'This is a non-profitable, fan-made Naruto Charater API, which is open-source and can be found on GitHub. :)',
     link: "https://github.com/Miraglia00/NarutoCharacterAPI"
   });
 });
 
-app.use('/v1/', api);
+
+
+app.use('/v1/',api);
 
 app.use(middlewares.notFound);
 app.use(middlewares.errorHandler);
+
+
 
 module.exports = app;

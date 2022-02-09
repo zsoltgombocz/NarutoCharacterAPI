@@ -7,25 +7,29 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "lint": "eslint --fix src",
-    "test": "mocha --exit"
+    "test": "mocha --exit",
+    "scrape": "node src/scraper/scraper.js"
   },
   "keywords": [],
-  "author": "CJ R. <cj@null.computer> (https://w3cj.now.sh)",
+  "author": "",
   "repository": {
     "type": "git",
     "url": "https://github.com/w3cj/express-api-starter.git"
   },
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.19.2",
-    "cheerio": "^1.0.0-rc.3",
+    "axios": "^0.21.1",
+    "cheerio": "^1.0.0-rc.10",
     "cors": "^2.8.5",
-    "dotenv": "^8.2.0",
+    "dotenv": "^8.6.0",
     "express": "^4.17.1",
+    "fs": "0.0.1-security",
     "fuse.js": "^6.4.1",
     "helmet": "^3.23.3",
+    "mongoose": "^6.1.8",
     "morgan": "^1.10.0",
-    "ora": "^5.0.0"
+    "ora": "^5.0.0",
+    "puppeteer": "^8.0.0"
   },
   "devDependencies": {
     "eslint": "^7.5.0",
@@ -34,5 +38,8 @@
     "mocha": "^8.1.1",
     "nodemon": "^2.0.4",
     "supertest": "^4.0.2"
+  },
+  "engines": {
+    "node": "16.13.1"
   }
 }
